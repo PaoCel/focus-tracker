@@ -34,7 +34,9 @@ private struct HistoryRow: View {
     let session: CompletedSession
 
     var body: some View {
-        HStack {
+        HStack(spacing: 12) {
+            SessionRing(session: session, lineWidth: 5, gap: 0.08)
+                .frame(width: 36, height: 36)
             VStack(alignment: .leading, spacing: 2) {
                 Text(session.start.formatted(date: .abbreviated, time: .shortened))
                 Text(session.duration.clockString)

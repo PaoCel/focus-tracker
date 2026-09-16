@@ -90,6 +90,14 @@ struct CompletedSession: Codable, Identifiable, Hashable {
 
     var duration: TimeInterval { end.timeIntervalSince(start) }
 
+    func time(for state: SessionState) -> TimeInterval {
+        switch state {
+        case .focus: focus
+        case .breakTime: breakTime
+        case .offTrack: offTrack
+        }
+    }
+
     /// Focus / (Focus + Off Track), rounded to whole percent. Breaks are excluded.
     /// `nil` when nothing was tracked as Focus or Off Track (e.g. a break-only session).
     var focusPercentage: Int? {
