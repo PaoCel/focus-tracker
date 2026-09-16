@@ -102,13 +102,11 @@ def main():
         if any(t["attributes"]["email"] == holder for t in testers):
             print(f"[asc] gruppo '{g['attributes']['name']}' ok, {holder} gia' tester")
             return
-        existing = call("GET", "/v1/betaTesters", {"filter[email]": holder, "limit": 5})["data"]
-        if existing:
-            call("POST", f"/v1/betaGroups/{g['id']}/relationships/betaTesters",
-                 body={"data": [{"type": "betaTesters", "id": existing[0]["id"]}]})
-        else:
-            call("POST", "/v1/betaTesters", body={"data": {"type": "betaTesters", "attributes": {"email": holder},
-                 "relationships": {"betaGroups": {"data": [{"type": "betaGroups", "id": g["id"]}]}}}})
+        # Sempre POST /v1/betaTesters con email + gruppo: collegare l'id di un tester gia'
+        # esistente per un'altra app a un gruppo interno risponde 409 "Tester(s) cannot be
+        # assigned" (2026-09-16), mentre la creazione via email va a buon fine (201).
+        call("POST", "/v1/betaTesters", body={"data": {"type": "betaTesters", "attributes": {"email": holder},
+             "relationships": {"betaGroups": {"data": [{"type": "betaGroups", "id": g["id"]}]}}}})
         print(f"[asc] {holder} aggiunto al gruppo '{g['attributes']['name']}'")
     else:
         print(__doc__)
