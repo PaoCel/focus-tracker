@@ -3,32 +3,42 @@ import AppIntents
 import SwiftUI
 import WidgetKit
 
+/// The whole activity takes the colour of the current state: the Lock Screen banner is
+/// tinted edge to edge, the Dynamic Island (whose black shell is system-drawn) gets a
+/// tinted keyline and a full-width tinted card in the expanded view.
 struct FocusSessionLiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: FocusSessionAttributes.self) { context in
             // Lock Screen / banner
             LockScreenView(context: context)
-                .padding(12)
-                .activityBackgroundTint(Color.black.opacity(0.55))
+                .padding(14)
+                .activityBackgroundTint(context.state.state.color)
                 .activitySystemActionForegroundColor(.white)
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
-                    StateBadge(state: context.state.state)
+                    StateBadge(state: context.state.state, tint: context.state.state.color)
+                        .invalidatableContent()
                 }
                 DynamicIslandExpandedRegion(.trailing) {
                     SessionTimer(start: context.attributes.sessionStart)
                         .font(.headline)
+                        .foregroundStyle(.white)
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    VStack(spacing: 8) {
+                    VStack(spacing: 10) {
                         TimeRow(state: context.state)
                         ControlRow(current: context.state.state)
                     }
+                    .padding(12)
+                    .foregroundStyle(.white)
+                    .background(context.state.state.color, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    .padding(.top, 4)
                 }
             } compactLeading: {
                 Image(systemName: context.state.state.symbol)
                     .foregroundStyle(context.state.state.color)
+                    .invalidatableContent()
             } compactTrailing: {
                 SessionTimer(start: context.attributes.sessionStart)
                     .font(.caption.monospacedDigit())
@@ -36,6 +46,7 @@ struct FocusSessionLiveActivity: Widget {
             } minimal: {
                 Image(systemName: context.state.state.symbol)
                     .foregroundStyle(context.state.state.color)
+                    .invalidatableContent()
             }
             .keylineTint(context.state.state.color)
         }
@@ -48,9 +59,10 @@ private struct LockScreenView: View {
     let context: ActivityViewContext<FocusSessionAttributes>
 
     var body: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 12) {
             HStack {
-                StateBadge(state: context.state.state)
+                StateBadge(state: context.state.state, tint: .white)
+                    .invalidatableContent()
                 Spacer()
                 SessionTimer(start: context.attributes.sessionStart)
                     .font(.title3.weight(.semibold))
@@ -77,16 +89,18 @@ private struct SessionTimer: View {
 
 private struct StateBadge: View {
     let state: SessionState
+    let tint: Color
 
     var body: some View {
         Label(state.title, systemImage: state.symbol)
             .font(.headline)
-            .foregroundStyle(state.color)
+            .foregroundStyle(tint)
     }
 }
 
-/// Accumulated Focus / Break / Off Track. The current state shows a live counter,
-/// the other two show static values.
+/// Accumulated Focus / Break / Off Track on the tinted background. The current state
+/// shows a live counter, the other two show static values. Marked invalidatable so the
+/// system shimmers it as soon as a button is pressed, before the update lands.
 private struct TimeRow: View {
     let state: FocusSessionAttributes.ContentState
 
@@ -96,27 +110,29 @@ private struct TimeRow: View {
                 VStack(spacing: 2) {
                     Text(s.title)
                         .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.white.opacity(0.75))
                     if s == state.state {
                         let start = state.counterStart(for: s)
                         Text(timerInterval: start...start.addingTimeInterval(12 * 3600), countsDown: false)
-                            .font(.callout.weight(.semibold))
+                            .font(.callout.weight(.bold))
                             .monospacedDigit()
                             .multilineTextAlignment(.center)
-                            .foregroundStyle(s.color)
                     } else {
                         Text(state.accumulated(s).clockString)
                             .font(.callout.weight(.semibold))
                             .monospacedDigit()
+                            .foregroundStyle(.white.opacity(0.85))
                     }
                 }
                 .frame(maxWidth: .infinity)
             }
         }
+        .invalidatableContent()
     }
 }
 
-/// The interactive buttons. Each one runs a LiveActivityIntent inside the app's process.
+/// The interactive buttons on the tinted background: the current state is a solid white
+/// pill, the others are translucent. Each one runs a LiveActivityIntent in the app's process.
 private struct ControlRow: View {
     let current: SessionState
 
@@ -130,9 +146,9 @@ private struct ControlRow: View {
                         .minimumScaleFactor(0.8)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 10)
-                        .foregroundStyle(s == current ? .white : s.color)
-                        .background(s == current ? s.color : s.color.opacity(0.25),
-                                    in: RoundedRectangle(cornerRadius: 10))
+                        .foregroundStyle(s == current ? s.color : .white)
+                        .background(s == current ? Color.white : Color.white.opacity(0.22),
+                                    in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                 }
                 .buttonStyle(.plain)
             }
@@ -142,9 +158,10 @@ private struct ControlRow: View {
                     .padding(.vertical, 10)
                     .padding(.horizontal, 12)
                     .foregroundStyle(.white)
-                    .background(Color.white.opacity(0.2), in: RoundedRectangle(cornerRadius: 10))
+                    .background(Color.white.opacity(0.22), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
             }
             .buttonStyle(.plain)
         }
+        .invalidatableContent()
     }
 }
