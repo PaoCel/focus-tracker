@@ -45,13 +45,15 @@ struct ActiveSessionView: View {
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.large)
+                // Sul bottone, non sulla TimelineView: su iOS 26 il dialogo e' un popover
+                // e si ancora alla view che porta il modifier.
+                .confirmationDialog("End this session?", isPresented: $confirmEnd, titleVisibility: .visible) {
+                    Button("End Session", role: .destructive) {
+                        Task { await store.endSession() }
+                    }
+                }
             }
             .padding()
-        }
-        .confirmationDialog("End this session?", isPresented: $confirmEnd, titleVisibility: .visible) {
-            Button("End Session", role: .destructive) {
-                Task { await store.endSession() }
-            }
         }
     }
 }
