@@ -1,0 +1,17 @@
+# Xcode
+build/
+DerivedData/
+*.xcarchive
+*.ipa
+xcuserdata/
+*.xcuserstate
+FocusTracker.xcodeproj/project.xcworkspace/xcuserdata/
+# Credenziali e firma: mai in repo
+*.p8
+*.p12
+*.mobileprovision
+*.cer
+.env*
+# macOS / iCloud
+.DS_Store
+* 2.*
